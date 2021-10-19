@@ -16,11 +16,15 @@ USAGE:\n
 # MAIN =========================================================
 @click.command(help=DESC)
 @click.option('--env_name', type=str, help='environment to load', required= True)
-def main(env_name):
+@click.option('--demos', type=str, help='Demonstrations', required=False, default=None)
+def main(env_name, demos):
     if env_name is "":
         print("Unknown env.")
         return
-    demos = pickle.load(open('./demonstrations/'+env_name+'_demos.pickle', 'rb'))
+    if demos == None:  
+        demos = pickle.load(open('./demonstrations/'+env_name+'_demos.pickle', 'rb'))
+    else : 
+        demos = pickle.load(open(demos, 'rb'))
     # render demonstrations
     demo_playback(env_name, demos)
 
@@ -30,9 +34,12 @@ def demo_playback(env_name, demo_paths):
     for path in demo_paths:
         e.set_env_state(path['init_state_dict'])
         actions = path['actions']
+        ep_r = 0.0
         for t in range(actions.shape[0]):
-            e.step(actions[t])
-            e.env.mj_render()
+            o, r, d,_ = e.step(actions[t])
+            ep_r += r
+            #e.env.mj_render()
+        print("Episode Reward : ", ep_r)
 
 if __name__ == '__main__':
     main()
